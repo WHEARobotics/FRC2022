@@ -1,3 +1,16 @@
+## This file tells git to ignore certain files or folders and not try
+## to add them to version control.  In this case, we don't want to 
+## version control the robotpy_intstaller cache files, or various
+## temporary files from the python interpreter.
+
+## robotpy deploy and install configurations (no need to version control)
+.deploy_cfg
+.installer_config
+
+## robotpy_installer cache folders
+opkg_cache/
+pip_cache/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -127,3 +140,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+## Pycharm projects
+.idea/
+
