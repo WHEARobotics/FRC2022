@@ -24,11 +24,11 @@ class MAKORobot(wpilib.TimedRobot):
         # First turned on, and then repeated 2.5-minute tests: 9.9, 1.8, 3.0, 16.8 (!), 1.6, 8.0 degrees.
         # Similar test, after the robot had been on 1/2 hour:  2.4, 1.9, -2.0, 0.3, 0.3, 0.7 degrees.
 
-        # Configure the input control, a single joystick.  Rod has a CAD joystick that shows up as 0, hence I use "1" in the argument.
+        # Configure the input control, a single joystick.
         # Thrustmaster joystick, set as left handed.
         # Positive values for channels 0-3: x, y, z, and throttle correspond to: right, backwards, clockwise, and slid back toward the user.
         # The "twist" channel is the same as z.
-        self.joystick = wpilib.Joystick(1)
+        self.joystick = wpilib.Joystick(0)
 
         # Create and configure the drive train controllers and motors, all Rev. Robotics SparkMaxes driving NEO motors.
         self.drive_rr = rev.CANSparkMax(1, rev._rev.CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -97,7 +97,7 @@ class MAKORobot(wpilib.TimedRobot):
         # The timer's hasPeriodPassed() method returns true if the time has passed, and updates
         # the timer's internal "start time".  This period is 1.0 seconds.
         if self.print_timer.hasPeriodPassed(1.0):
-            # Send a string representing the red component to a field called 'DB/String 0' on the SmartDashboard.
+            # Send a string representing the joystick x axis to a field called 'DB/String 0' on the SmartDashboard.
             # The default driver station dashboard's "Basic" tab has some pre-defined keys/fields
             # that it looks for, which is why I chose these.
             wpilib.SmartDashboard.putString('DB/String 0', 'x:   {:5.3f}'.format(self.joystick.getX()))
