@@ -28,19 +28,20 @@ class MAKORobot(wpilib.TimedRobot):
         # Thrustmaster joystick, set as left handed.
         # Positive values for channels 0-3: x, y, z, and throttle correspond to: right, backwards, clockwise, and slid back toward the user.
         # The "twist" channel is the same as z.
-        self.joystick = wpilib.Joystick(0)
-
+        self.Joystick_L = wpilib.Joystick(0)
+        self.Joystick_R = wpilib.Joystick(1)
         # Create and configure the drive train controllers and motors, all Rev. Robotics SparkMaxes driving NEO motors.
+        # when we switch to Talons, only need one parameter
         self.drive_rr = rev.CANSparkMax(1, rev._rev.CANSparkMaxLowLevel.MotorType.kBrushless)
         self.drive_rf = rev.CANSparkMax(3, rev._rev.CANSparkMaxLowLevel.MotorType.kBrushless)
         self.drive_lr = rev.CANSparkMax(2, rev._rev.CANSparkMaxLowLevel.MotorType.kBrushless)
         self.drive_lf = rev.CANSparkMax(4, rev._rev.CANSparkMaxLowLevel.MotorType.kBrushless)
 
         # Inversion configuration for the 2022 WPILib MecanumDrive code, which removed internal inversion for right-side motors.
-        self.drive_rr.setInverted(True) # 
-        self.drive_rf.setInverted(True) # 
-        self.drive_lr.setInverted(False) # 
-        self.drive_lf.setInverted(False) # 
+        self.drive_rr.setInverted(False) # 
+        self.drive_rf.setInverted(False) # 
+        self.drive_lr.setInverted(True) # 
+        self.drive_lf.setInverted(True) # 
 
         # Set all motors to coast mode when idle/neutral.
         # Note that this is "IdleMode" rather than the "NeutralMode" nomenclature used by CTRE CANTalons.
@@ -52,8 +53,8 @@ class MAKORobot(wpilib.TimedRobot):
         # Now that we have motors, we can set up an object that will handle mecanum drive.
         # From the documentation, North, East, and Down are the three axes.
         # Positive X is forward, Positive Y is right, Positive Z is down.  Clockwise rotation around Z (as viewed from ___) is positive.
-        self.drivetrain = wpilib.drive.MecanumDrive(self.drive_lf, self.drive_lr, self.drive_rf, self.drive_rr)
-
+        # self.drivetrain = wpilib.drive.MecanumDrive(self.drive_lf, self.drive_lr, self.drive_rf, self.drive_rr)
+        # commented out above, to match drivetrain to 2020 code setup
     def disabledInit(self):
         """This function gets called once when the robot is disabled.
            In the past, we have not used this function, but it could occasionally
@@ -91,8 +92,14 @@ class MAKORobot(wpilib.TimedRobot):
         # They say positive Z is down, and CW is positive, and CW is +Z on the joystick, and that is
         # what works.  But it is incorrect vector math, because X cross Y = Z, and when using the right hand rule
         # that makes +Z up, and positive angle starting at X and moving toward Y would be CCW when viewed from above the robot.
-        # I'm not sure about whether the gyro angle should be negated or not.  We'll have to try.
-        self.drivetrain.driveCartesian(-self.joystick.getY() / 4, self.joystick.getX() / 4, self.joystick.getZ() / 4, -self.gyro.getAngle())
+        # I'm not sure about whether the gyro angle should be negated or not.  We have to try.
+        # self.drivetrain.driveCartesian(-self.joystick.getY() / 4, self.joystick.getX() / 4, self.joystick.getZ() / 4, -self.gyro.getAngle())
+
+        #to invert motor diurection, one can put a negative sign in front of self.joystick, or one can reverse the invert(True/False)
+        self.drive_lf.set(self.Joystick_L.getY() / 2)
+        self.drive_rf.set(self.Joystick_R.getY() / 2)
+        self.drive_lr.set(self.Joystick_L.getY() / 2)
+        self.drive_rr.set(self.Joystick_R.getY() / 2)
 
         # The timer's hasPeriodPassed() method returns true if the time has passed, and updates
         # the timer's internal "start time".  This period is 1.0 seconds.
@@ -100,10 +107,10 @@ class MAKORobot(wpilib.TimedRobot):
             # Send a string representing the joystick x axis to a field called 'DB/String 0' on the SmartDashboard.
             # The default driver station dashboard's "Basic" tab has some pre-defined keys/fields
             # that it looks for, which is why I chose these.
-            wpilib.SmartDashboard.putString('DB/String 0', 'x:   {:5.3f}'.format(self.joystick.getX()))
-            wpilib.SmartDashboard.putString('DB/String 1', 'y: {:5.3f}'.format(self.joystick.getY()))
-            wpilib.SmartDashboard.putString('DB/String 2', 'z:  {:5.3f}'.format(self.joystick.getZ()))
-            wpilib.SmartDashboard.putString('DB/String 3', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
+           # wpilib.SmartDashboard.putString('DB/String 0', 'x:   {:5.3f}'.format(self.joystick.getX()))
+           # wpilib.SmartDashboard.putString('DB/String 1', 'y: {:5.3f}'.format(self.joystick.getY()))
+           # wpilib.SmartDashboard.putString('DB/String 2', 'z:  {:5.3f}'.format(self.joystick.getZ()))
+           # wpilib.SmartDashboard.putString('DB/String 3', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
             # wpilib.SmartDashboard.putNumber('DB/Slider 0', 4)
             # wpilib.SmartDashboard.putBoolean('DB/LED 0', password) # Light the virtual LED if the password has been entered properly.
             # wpilib.SmartDashboard.putString('DB/String 5', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
