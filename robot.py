@@ -71,11 +71,39 @@ class MAKORobot(wpilib.TimedRobot):
     def autonomousInit(self):
         """This function is run once each time the robot enters autonomous mode."""
         self.gyro.reset()  # Reset at the beginning of a match, because the robot could have been sitting for a while, gyro drifting.
-        pass
+        self.state = 1
+        self.print_timer.start()
 
     def autonomousPeriodic(self):
         """This function is called periodically during autonomous."""
-        pass
+        if self.state == 1:
+            self.AutoDriveForward()
+            if self.print_timer.hasPeriodPassed(2.0):
+                self.state = 2
+        elif self.state == 2:
+            self.AutoTurnRight()
+            if self.print_timer.hasPeriodPassed(0.5):
+                self.state =3
+        elif self.state == 3:
+            self.AutoDriveForward()
+            if self.print_timer.hasPeriodPassed(1.0):
+                self.state = 4
+        elif self.state == 4:
+            self.AutoTurnRight()
+            if self.print_timer.hasPeriodPassed(0.5):
+                self.state = 5
+        elif self.state == 5:
+            self.AutoDriveBackward()
+            if self.print_timer.hasPeriodPassed(2.0):
+                self.state =6
+        elif self.state == 6:
+            self.AutoTurnRight()
+            if self.print_timer.hasPeriodPassed(0.5):
+                self.state = 7
+        elif self.state == 7:
+            self.AutoDriveForward()
+            if self.print_timer.hasPeriodPassed(2.0):
+                self.state = 8
 
     def teleopInit(self):
         """This function is run once each time the robot enters teleop mode."""
@@ -104,14 +132,15 @@ class MAKORobot(wpilib.TimedRobot):
         # The timer's hasPeriodPassed() method returns true if the time has passed, and updates
         # the timer's internal "start time".  This period is 1.0 seconds.
         if self.print_timer.hasPeriodPassed(1.0):
+            
             # Send a string representing the joystick x axis to a field called 'DB/String 0' on the SmartDashboard.
             # The default driver station dashboard's "Basic" tab has some pre-defined keys/fields
             # that it looks for, which is why I chose these.
            # wpilib.SmartDashboard.putString('DB/String 0', 'x:   {:5.3f}'.format(self.joystick.getX()))
-           # wpilib.SmartDashboard.putString('DB/String 1', 'y: {:5.3f}'.format(self.joystick.getY()))
-           # wpilib.SmartDashboard.putString('DB/String 2', 'z:  {:5.3f}'.format(self.joystick.getZ()))
-           # wpilib.SmartDashboard.putString('DB/String 3', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
-            # wpilib.SmartDashboard.putNumber('DB/Slider 0', 4)
+            wpilib.SmartDashboard.putString('DB/String 1', 'L_y: {:5.3f}'.format(self.Joystick_L.getY()))
+            wpilib.SmartDashboard.putString('DB/String 2', 'R_Y:  {:5.3f}'.format(self.Joystick_R.getY()))
+            #wpilib.SmartDashboard.putString('DB/String 3', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
+            #wpilib.SmartDashboard.putNumber('DB/Slider 0', 4)
             # wpilib.SmartDashboard.putBoolean('DB/LED 0', password) # Light the virtual LED if the password has been entered properly.
             # wpilib.SmartDashboard.putString('DB/String 5', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
 
@@ -124,8 +153,29 @@ class MAKORobot(wpilib.TimedRobot):
             # user_value, and is formatted as a floating point (the "f"), with 4 digits and 2 digits
             # after the decimal place. https://docs.python.org/3/library/string.html#formatstrings
             #self.logger.info('Slider 1 is {:4.2f}'.format(user_value))
+    def AutoDriveForward(self):
+        self.drive_lf.set(-0.25)
+        self.drive_rf.set(-0.25)
+        self.drive_lr.set(-0.25)
+        self.drive_rr.set(-0.25)
 
+    def AutoTurnRight(self):
+        self.drive_lf.set(-0.25)
+        self.drive_rf.set(0.25)
+        self.drive_lr.set(-0.25)
+        self.drive_rr.set(0.25)
 
+    def AutoTurnLeft(self):
+        self.drive_lf.set(0.25)
+        self.drive_rf.set-(0.25)
+        self.drive_lr.set(0.25)
+        self.drive_rr.set(-0.25)
+
+    def AutoDriveBackward(self):
+        self.drive_lf.set(0.25)
+        self.drive_rf.set(0.25)
+        self.drive_lr.set(0.25)
+        self.drive_rr.set(0.25)
 
 # The following little bit of code allows us to run the robot program.
 # In Python, the special variable __name__ contains the name of the module that it is in,
