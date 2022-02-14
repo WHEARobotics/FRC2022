@@ -28,7 +28,8 @@ class MAKORobot(wpilib.TimedRobot):
         # Thrustmaster joystick, set as left handed.
         # Positive values for channels 0-3: x, y, z, and throttle correspond to: right, backwards, clockwise, and slid back toward the user.
         # The "twist" channel is the same as z.
-        self.joystick = wpilib.Joystick(0)
+        self.joystick_l = wpilib.Joystick(0)
+        self.joystick_r = wpilib.Joystick(1)      
 
         # Create and configure the drive train controllers and motors, all Rev. Robotics SparkMaxes driving NEO motors.
         self.drive_rr = rev.CANSparkMax(1, rev._rev.CANSparkMaxLowLevel.MotorType.kBrushless)
@@ -52,7 +53,8 @@ class MAKORobot(wpilib.TimedRobot):
         # Now that we have motors, we can set up an object that will handle mecanum drive.
         # From the documentation, North, East, and Down are the three axes.
         # Positive X is forward, Positive Y is right, Positive Z is down.  Clockwise rotation around Z (as viewed from ___) is positive.
-        self.drivetrain = wpilib.drive.MecanumDrive(self.drive_lf, self.drive_lr, self.drive_rf, self.drive_rr)
+        # self.drivetrain = wpilib.drive.MecanumDrive(self.drive_lf, self.drive_lr, self.drive_rf, self.drive_rr)
+        
 
     def disabledInit(self):
         """This function gets called once when the robot is disabled.
@@ -92,8 +94,13 @@ class MAKORobot(wpilib.TimedRobot):
         # what works.  But it is incorrect vector math, because X cross Y = Z, and when using the right hand rule
         # that makes +Z up, and positive angle starting at X and moving toward Y would be CCW when viewed from above the robot.
         # I'm not sure about whether the gyro angle should be negated or not.  We'll have to try.
-        self.drivetrain.driveCartesian(-self.joystick.getY() / 4, self.joystick.getX() / 4, self.joystick.getZ() / 4, -self.gyro.getAngle())
-
+        # self.drivetrain.driveCartesian(-self.joystick.getY() / 4, self.joystick.getX() / 4, self.joystick.getZ() / 4, -self.gyro.getAngle())
+        
+        self.drive.rr.set(self.joystick_r.getY())
+        self.drive.rf.set(self.joystick_r.getY())
+        self.drive.lr.set(self.joystick_l.getY())
+        self.drive.lf.set(self.joystick_l.getY())
+        
         # The timer's hasPeriodPassed() method returns true if the time has passed, and updates
         # the timer's internal "start time".  This period is 1.0 seconds.
         if self.print_timer.hasPeriodPassed(1.0):
