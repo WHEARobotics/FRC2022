@@ -37,12 +37,17 @@ class MyRobot(wpilib.TimedRobot):
         self.l_motorBack.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         self.l_motorFront.setNeutralMode(ctre._ctre.NeutralMode.Coast)
         self.r_motorBack.setNeutralMode(ctre._ctre.NeutralMode.Coast)
-        self.r_motorFront.setNeutralMode(ctre._ctre.NeutralMode.Coast)                                                                                                                                                                                              
-      
+        self.r_motorFront.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+
+        self.l_motorEncodePos = self.l_motorBack.getSelectedSensorPosition
+        self.r_motorEncodePos = self.r_motorBack.getSelectedSensorPosition
+
+
+
         kTimeout = 30 #amount of milliseconds before an error pops up
         kLoop = 0
             
-        self.targetVelocity = #int(velocity)
+        self.targetVelocity = int(11000)
         self.targetVelocity2 = #might not need this controlled loop
 
         TG1 = #float of calculated constant
@@ -57,6 +62,12 @@ class MyRobot(wpilib.TimedRobot):
         #sets the sensor as the one built-in to the falcon's talonfx
         self.shooter.configSelectedFeedbackSensor(ctre._ctre.FeedbackDevice.IntegratedSensor)
         self.shooter.setSelectedSensorPosition(0)
+
+        #set mode to coast, meaning that the back-emf will not be generated (back electromotive force)
+        self.shooter.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+
+        #set up variables equal to encoder positions
+        self.shooterEncodePos = self.shooter.getSelectedSensorPosition()
 
         self.shooter.configNominalOutputForward(0, kTimeout)
         self.shooter.configNominalOutputReverse(0, kTimeout)
@@ -74,17 +85,28 @@ class MyRobot(wpilib.TimedRobot):
         self.kicker = ctre.TalonSRX(6)
         self.kicker.setInverted(True)
         self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        #set mode to coast, meaning that the back-emf will not be generated (back electromotive force)
+        self.kicker.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+        #set up variables equal to encoder positions
+        self.kickerEncodePos = self.kicker.getSelectedSensorPosition()
 
         #code for the tread component
         self.tread = ctre.TalonSRX(7)
         self.tread.setInverted(True)
         self.tread.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        #set mode to coast, meaning that the back-emf will not be generated (back electromotive force)
+        self.tread.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+        #set up variables equal to encoder positions
+        self.treadEncodePos = self.kictreadker.getSelectedSensorPosition()
 
         #code for the collector component
         self.collector = ctre.TalonSRX(8)
         self.collector.setInverted(True)  
         self.collector.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
- 
+        #set mode to coast, meaning that the back-emf will not be generated (back electromotive force)
+        self.kicker.setNeutralMode(ctre._ctre.NeutralMode.Coast)
+
+
         #set up joysticks
         self.l_joy = wpilib.Joystick(0)
         self.r_joy = wpilib.Joystick(1)
@@ -92,15 +114,67 @@ class MyRobot(wpilib.TimedRobot):
 
     def autonomousInit(self):
 
+        #restart timer
+        self.ourTimer.reset()
+        self.ourTimer.start()
+
+        #set sensor position to 0
         self.l_motorFront.setSelectedSensorPosition(0)
         self.r_motorFront.setSelectedSensorPosition(0)
+        self.shooter.setSelectedSensorPosition(0)
+
+        '''
+        self.kicker.setSelectedSensorPosition(0)
+        self.tread.setSelectedSensorPosition(0)
+        self.collector.setSelectedSensorPosition(0)
+        '''
+
+        #sets state at the begining for the dead reckoning
+        self.autoState = 1
+        self.plan = 1
 
     def autonomousPeriodic(self):
 
-        Time = self.ourTimer.get() #sets a timer
- 
-        l_encoderPos = self.l_motorFront.getSelectedSensorPosition() #get the positions for sensors inside the motor
-        r_encoderPos = self.r_motorFront.getSelectedSensorPosition()
+        #update position variable every time periodic runs
+        self.l_motorEncodePos = self.l_motorBack.getSelectedSensorPosition
+        self.r_motorEncodePos = self.r_motorBack.getSelectedSensorPosition
+
+        #update speed variable every time periodic runs
+        self.l_motorEncodeSpeed = self.l_motorBack.getSelectedSensorPosition()
+        self.r_motorEncodeSpeed = self.r_motorBack.getSelectedSensorPosition()
+
+
+        #calls the function to calculate rotations to distance and sets it to new variable
+        self.l_distance = self.encoderToInch(self.l_motorEncodePos)
+        self.r_distance = self.encoderToInch(self.r_motorEncodePos)
+
+        #set new variable to speed of motors
+        l_vel = self.encoderSpeedInPerSec(self.l_motorEncodeSpeed)
+        r_vel = self.encoderSpeedInPerSec(self.r_motorEncodeSpeed)
+
+
+        wpilib.SmartDashboard.putString('DB/String 0', 'left inches/second:   {:5.3f}'.format(l_vel()))
+        wpilib.SmartDashboard.putString('DB/String 1', 'right inches/second:   {:5.3f}'.format(r_vel()))
+        wpilib.SmartDashboard.putString('DB/String 2', 'left position:   {:5.3f}'.format(self.l_distance()))
+        wpilib.SmartDashboard.putString('DB/String 3', 'right position:   {:5.3f}'.format(self.r_distance()))
+
+
+        #variable is equal to timer started in auto init
+        Time = self.ourTimer.get()
+
+        if self.autoState == 1:
+            if self.plan == 1, 2, 3, 4, 5, 6:
+                self.l_motorFront.set(-1.0)
+                self.r_motorFront.set(-1.0)
+            if Time >= 5:
+                self.autostate = 2
+        if self.autostate == 2:
+            if self.plan == 1:
+                self.l_motorFront.set()
+            if self.plan == 2:
+                self.l_motorFront.set()
+
+
 
     def disabledInit(self):
 
@@ -113,7 +187,8 @@ class MyRobot(wpilib.TimedRobot):
 
         self.l_motorFront.setSelectedSensorPosition(0)
         self.r_motorFront.setSelectedSensorPosition(0)
- 
+
+
     def teleopPeriodic(self):
 
         #get joystick values
@@ -124,14 +199,82 @@ class MyRobot(wpilib.TimedRobot):
         self.l_motorFront.set(ctre._ctre.ControlMode.PercentOutput, left_command)
         self.r_motorFront.set(ctre._ctre.ControlMode.PercentOutput, right_command)
 
-        l_encoderPos = self.l_motorFront.getSelectedSensorPosition
-        r_encoderPos = self.r_motorFront.getSelectedSensorPosition
+        #update position variable every time periodic runs
+        self.l_motorEncodePos = self.l_motorBack.getSelectedSensorPosition
+        self.r_motorEncodePos = self.r_motorBack.getSelectedSensorPosition
 
-        #these are used to tell us where the robot is
-        wpilib.SmartDashboard.putString('DB/String 0', 'x:   {:5.3f}'.format(self.left_command.geRawAxis()))
-        wpilib.SmartDashboard.putString('DB/String 1', 'y: {:5.3f}'.format(self.right_command.getRawAxis()))
-        wpilib.SmartDashboard.putString('DB/String 2', 'z:  {:5.3f}'.format(self.Ljoy.getZ()))
-        wpilib.SmartDashboard.putString('DB/String 3', 'Angle: {:5.1f}'.format(self.gyro.getAngle()))
+        #update speed variable every time periodic runs
+        self.l_motorEncodeSpeed = self.l_motorBack.getSelectedSensorPosition()
+        self.r_motorEncodeSpeed = self.r_motorBack.getSelectedSensorPosition()
+
+
+        #calls the function to calculate rotations to distance and sets it to new variable
+        self.l_distance = self.encoderToInch(self.l_motorEncodePos)
+        self.r_distance = self.encoderToInch(self.r_motorEncodePos)
+
+        #set new variable to speed of motors
+        l_vel = self.encoderSpeedInPerSec(self.l_motorEncodeSpeed)
+        r_vel = self.encoderSpeedInPerSec(self.r_motorEncodeSpeed)
+
+        wpilib.SmartDashboard.putString('DB/String 0', 'left joystick:   {:5.3f}'.format(self.left_command()))
+        wpilib.SmartDashboard.putString('DB/String 1', 'right joystick: {:5.3f}'.format(self.right_command()))
+        wpilib.SmartDashboard.putString('DB/String 2', 'left inches/second:   {:5.3f}'.format(l_vel()))
+        wpilib.SmartDashboard.putString('DB/String 3', 'right inches/second:   {:5.3f}'.format(r_vel()))
+        wpilib.SmartDashboard.putString('DB/String 4', 'left position:   {:5.3f}'.format(self.l_distance()))
+        wpilib.SmartDashboard.putString('DB/String 5', 'right position:   {:5.3f}'.format(self.r_distance()))
+
+        self.shooterEncodePos = self.shooter.getSelectedSensorPosition()
+        self.shooterSpeed = self.shooter.getSelectedSensorVelocity()
+
+
+
+
+
+
+
+
+        if self.l_joy.getRawButton(2):
+            self.tread.set(ctre._ctre.ControlMode.PercentOutput, 0.45)
+            self.collector.set(ctre._ctre.ControlMode.PercentOutput, 0.45)
+        else:
+            
+            # if self.l_joy.getRawButton(3):
+            #     self.kicker.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
+            # else:
+            #     self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+            if self.l_joy.getRawButton(4):
+                self.collector.set(ctre._ctre.ControlMode.PercentOutput, -0.45)
+                self.tread.set(ctre._ctre.ControlMode.PercentOutput, -0.45)
+            else:
+                self.collector.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+                self.tread.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+        if self.l_joy.getRawButton(1):
+            #.shooter.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
+            self.shooter.set(ctre._ctre.ControlMode.Velocity, self.targetVelocity)
+            if 11000 <= self.shooterSpeed and self.shooterSpeed <= 11050:
+                #if self.l_joy.getRawButton(1):
+                    self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
+                    # self.man1Tread.set(ctre._ctre.ControlMode.PercentOutput, 0.55)
+               # else:
+                   # self.man1Kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+                    # self.man1Tread.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            else:
+                self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+        else:
+            self.shooter.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+    def encoderToInch(self, encodeCounts):
+        return encodeCounts / 2048 / 10.75 * 18.84
+
+    def encoderSpeedInPerSec(self, unitsPerTenthSec):
+        rotationsPerSec = unitsPerTenthSec * 10 / 2048
+        distancePerSec = rotationsPerSec / 10.75 * 18.84
+        return distancePerSec
+
+
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
