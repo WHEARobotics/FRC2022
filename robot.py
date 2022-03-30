@@ -205,6 +205,8 @@ class MyRobot(wpilib.TimedRobot):
         self.l_motorFront.setSelectedSensorPosition(0)
         self.r_motorFront.setSelectedSensorPosition(0)
 
+        self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.15)
+
 
     def teleopPeriodic(self):
 
@@ -222,13 +224,16 @@ class MyRobot(wpilib.TimedRobot):
         # self.r_motorFront = self.right_command.getY()
 
         #update position variable every time periodic runs
-        self.l_motorEncodePos = self.l_motorBack.getSelectedSensorPosition()
-        self.r_motorEncodePos = self.r_motorBack.getSelectedSensorPosition()
+        #changed from motor_back to motor_front, because we reset the encoders for the front but not the back in teleop init
+        self.l_motorEncodePos = self.l_motorFront.getSelectedSensorPosition()
+        self.r_motorEncodePos = self.r_motorFront.getSelectedSensorPosition()
 
         #update speed variable every time periodic runs
         self.l_motorEncodeSpeed = self.l_motorBack.getSelectedSensorVelocity()
         self.r_motorEncodeSpeed = self.r_motorBack.getSelectedSensorVelocity()
 
+        self.shooterEncodePos = self.shooter.getSelectedSensorPosition()
+        self.shooterSpeed = self.shooter.getSelectedSensorVelocity()
 
         #calls the function to calculate rotations to distance and sets it to new variable
         self.l_distance = self.encoderToInch(self.l_motorEncodePos)
@@ -240,10 +245,10 @@ class MyRobot(wpilib.TimedRobot):
 
         wpilib.SmartDashboard.putString('DB/String 0', 'left joystick:   {:5.3f}'.format(left_command))
         wpilib.SmartDashboard.putString('DB/String 1', 'right joystick: {:5.3f}'.format(right_command))
-        wpilib.SmartDashboard.putString('DB/String 2', 'left inches/second:   {:5.3f}'.format(l_vel))
-        wpilib.SmartDashboard.putString('DB/String 3', 'right inches/second:   {:5.3f}'.format(r_vel))
-        wpilib.SmartDashboard.putString('DB/String 4', 'left position:   {:5.3f}'.format(self.l_distance))
-        wpilib.SmartDashboard.putString('DB/String 5', 'right position:   {:5.3f}'.format(self.r_distance))
+        wpilib.SmartDashboard.putString('DB/String 2', 'left inches:   {:5.3f}'.format(self.l_distance))
+        wpilib.SmartDashboard.putString('DB/String 3', 'right inches:   {:5.3f}'.format(self.r_distance))
+        #above two lines are accurate distance in inces
+        wpilib.SmartDashboard.putString('DB/String 4', 'shooter RPS:   {:5.3f}'.format(self.shooterSpeed / 2048))
 
 
 
@@ -251,10 +256,6 @@ class MyRobot(wpilib.TimedRobot):
         #     self.collector_piston.set(wpilib._wpilib.DoubleSolenoid.Value.kReverse)
         # elif self.l_joy.getRawButton(9):
         #     self.collector_piston.set(wpilib._wpilib.DoubleSolenoid.Value.kForward)
-
-
-        self.shooterEncodePos = self.shooter.getSelectedSensorPosition()
-        self.shooterSpeed = self.shooter.getSelectedSensorVelocity()
 
 
         #The following 10 lines of code do this: when button 2 is pushed, the collector and pulley (tread) will spin.  
@@ -267,7 +268,7 @@ class MyRobot(wpilib.TimedRobot):
             if self.l_joy.getRawButton(4):
                 self.kicker.set(ctre._ctre.ControlMode.PercentOutput, -0.5)
             else:
-                self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+                self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.5)
         else:                                                                   #originally we thought we could get away without the "else," but it would just keep spinning
             self.collector.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
             self.tread.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
@@ -283,20 +284,31 @@ class MyRobot(wpilib.TimedRobot):
  
         if self.l_joy.getRawButton(1):
         ##3/29 FIX:  when 1 is pushed, the motor fights itself and jumps back and forth
-            #self.shooter.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
-            self.shooter.set(ctre._ctre.ControlMode.Velocity, self.targetVelocity)
-            if 11000 <= self.shooterSpeed and self.shooterSpeed <= 11050:
-                if self.l_joy.getRawButton(1):
-                    self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
-                    #self.Tread.set(ctre._ctre.ControlMode.PercentOutput, 0.55)
-                else: ##NOTE: need to change this to always on reverse somewhere under new planning
-                    self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            else:
-                self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-                # self.man1Tread.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            self.shooter.set(ctre._ctre.ControlMode.PercentOutput, .50)
+            #self.shooter.set(ctre._ctre.ControlMode.Velocity, self.targetVelocity)
+            # if 11000 <= self.shooterSpeed and self.shooterSpeed <= 11050:
+            #     if self.l_joy.getRawButton(1):
+            #         self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.75)
+            #         #self.Tread.set(ctre._ctre.ControlMode.PercentOutput, 0.55)
+            #     else: ##NOTE: need to change this to always on reverse somewhere under new planning
+            #         self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            # else:
+            #     self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            #     # self.man1Tread.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
         else:
             self.shooter.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
-            self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+            #self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.0)
+
+        ##NOTE: 3/30: neeed to allow button 4 to be pushed while it senses that 13 has been pushed and/or that it's still spinning.
+        if self.l_joy.getRawButton(13):
+            self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.15)
+
+            if self.l_joy.getRawButton(4):
+                self.kicker.set(ctre._ctre.ControlMode.PercentOutput, -.15)
+            else:
+                self.kicker.set(ctre._ctre.ControlMode.PercentOutput, .15)
+        elif self.l_joy.getRawButton(12):
+            self.kicker.set(ctre._ctre.ControlMode.PercentOutput, 0.00)
 
     def encoderToInch(self, encodeCounts):
         return encodeCounts / 2048 / 10.75 * 18.84
